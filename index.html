@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <form onsubmit="submitImage(event)">
+    <input type="file" id="image" />
+    <input type="number" id="recorte" />
+    <button type="submit">
+      OK
+    </button>
+  </form>
+
+  <div id="logs"></div>
+
+  <script>
+    function logInfo(...args) {
+      const logs = document.getElementById('logs');
+      logs.innerHTML += `<br /> ${args.join(' ')}`;
+    }
+
+    function submitImage($event) {
+      $event.preventDefault();
+      $event.stopPropagation();
+
+      const inputImage = document.getElementById('image');
+      if (!inputImage.files[0]) return;
+
+      const inputRecorte = document.getElementById('recorte');
+      if (/\D/.test(inputRecorte.value)) return;
+
+      const [file] = inputImage.files;
+      const recorte = Number(inputRecorte.value);
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.display = 'none';
+      img.onload = () => cropImage(img, recorte);
+      document.body.appendChild(img);
+    }
+
+    function cropImage(img, cropSize) {
+      logInfo('width', img.naturalWidth);
+      logInfo('height', img.naturalHeight);
+
+      const maxWidth = Math.round(img.naturalWidth / 5);
+      const maxHeight = Math.round(img.naturalHeight / 5);
+
+      const table = document.createElement('table');
+      document.body.appendChild(table);
+
+      const tbody = document.createElement('tbody');
+      table.appendChild(tbody);
+
+      for (let i = 0; i < cropSize; i += 1) {
+        const y = i * maxHeight;
+        const height = i === (cropSize - 1) ? img.naturalHeight : maxHeight;
+
+        const tr = document.createElement('tr');
+        tbody.append(tr);
+
+        for (let j = 0; j < cropSize; j += 1) {
+          const x = j * maxWidth;
+          const width = j === (cropSize - 1) ? img.naturalWidth : maxWidth;
+
+          const td = document.createElement('td');
+          tr.appendChild(td);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = maxWidth;
+          canvas.height = maxHeight;
+
+          const context = canvas.getContext('2d');
+          context.drawImage(img, -x, -y);
+
+          td.appendChild(canvas);
+
+          logInfo('x', x, 'y', y, 'w', width + x, 'h', height + y);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
